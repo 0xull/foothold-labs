@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ $(id -u) != "0" ]]; then
+    LOG_FATAL "Please run the script as root (or use 'sudo')"
+    exit 1
+fi
+
 cd "$(dirname "$0")" || exit 1
 mkdir -p workspace
 
@@ -8,6 +13,8 @@ NC='\033[0m'
 
 DEFAULT_IMAGE_NAME="foothold-lab"
 DEFAULT_TAG='latest'
+FOOTHOLD_LAB_WORKSPACE="/workspace"
+FTHLD_LABS_VOLUME="FOOTHOLD_LAB_VOLUME"
 
 LOG_INFO() {
     echo -e "[$(date +%FT%T)] [INFO] $1"
@@ -53,21 +60,37 @@ docker_interactive() {
         shift
     done
     
+    LOG_INFO "Checking if ${FTHLD_LABS_VOLUME} volume exists..."
+    if ! docker volume inspect $FTHLD_LABS_VOLUME >/dev/null 2>&1; then
+        LOG_INFO "Volume not found. Creating it volume..."
+        docker volume create $FTHLD_LABS_VOLUME || exit 1
+        
+        local vol_mount=$(docker inspect $FTHLD_LABS_VOLUME | grep -i mountpoint | cut -d : -f2 | cut -d, -f1)
+        chmod 777 -R $vol_mount
+    else 
+        LOG_INFO "Volume found."
+    fi
+    
+    LOG_INFO "The /linux directory is made persistent inside the volume, ${FTHLD_LABS_VOLUME}"
+    docker inspect $FTHLD_LABS_VOLUME
     
     if $allow_gui; then
         LOG_INFO "Launching container with GUI support..."
-        docker run "$privileged" -it --rm \
-            --device /dev/kvm \
-            -v "/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-            -e DISPLAY=$DISPLAY \
-            --volume "${PWD}/workspace:/home/dev/workspace" \
+        
+        local xauth_var=$(echo $(xauth info | grep Auth | cut -d: -f2))
+        
+        docker run --privileged -it --rm \
+            --net=host --env="DISPLAY" --volume="${xauth_var}:/root/.Xauthority:rw" \
+            --volume $FTHLD_LABS_VOLUME:/workspace \
+            --workdir "$FOOTHOLD_LAB_WORKSPACE"\
             "$full_image_name"
     else
         LOG_INFO "Launching container in standard CLI mode..."
-        docker run "$privileged" -it --rm \
+        docker run $privileged -it --rm \
             --device /dev/net/tun:/dev/net/tun \
             --cap-add=NET_ADMIN \
-            --volume "${PWD}/workspace:/home/dev/workspace" \
+            --volume $FTHLD_LABS_VOLUME:/workspace \
+            --workdir "$FOOTHOLD_LAB_WORKSPACE"\
             "$full_image_name"
     fi
 }
