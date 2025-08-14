@@ -1,130 +1,159 @@
+ISO_URL="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.0.0-amd64-netinst.iso"
+VM_DISK_SIZE="20G"
+VM_MEM_SIZE="4G"
+ISO_FILE="debian-13.0.0-amd64-netinst.iso"
+VM_DISK_FILE="foothold-labs.qcow2"
+
+RED='\033[0;31m'
+NC='\033[0m'
+
 LOG_FATAL() {
-    echo -e "[$(date +%FT%T)] [FATAL] $1"
+    echo -e "[$(date +%FT%T)] [${RED}FATAL${NC}] $1"
+    exit 1
 }
 
 LOG_INFO() {
-    echo -e "[$(date +%FT%T)] [INFO] $1" && exit 1
+    echo -e "[$(date +%FT%T)] [INFO] $1"
 }
 
-FTHLD_LABS_LV="foothold-labs.qcow2"
-FTHLD_LABS_LV_SIZE="20G"
-ISO_FILE="debian-13.0.0-amd64-netinst.iso"
-
-LOG_INFO "Checking for ISO file: ${ISO_FILE}"
-if ! file $ISO_FILE >/dev/null 2>&1; then
-    LOG_INFO "ISO file not found. If you've got one, then update the <ISO_FILE=""> variable to point to it"
-    LOG_INFO "Or download from https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.0.0-amd64-netinst.iso"
-else
-    LOG_INFO "ISO file found"
-fi
+check_deps() {
+    LOG_INFO "Checking for required dependencies..."
+    for cmd in qemu-system-x86_64 qemu-img wget; do
+        if ! command -v "$cmd" &>/dev/null; then
+            LOG_FATAL "Required command '$cmd' not found. Please install it."
+        fi
+    done
+    LOG_INFO "All required dependencies found."
+}
 
 print_help() {
-    echo "Usage:"
-    echo "./run.sh [command] [OPTIONS]"
+    echo "Usage: $0 [command]"
+    echo ""
+    echo "A tool to manage a headless QEMU/KVM virtual machine."
     echo ""
     echo "Comands:"
-    echo "  create-vm -- Setups a headless VM with the installer ISO attached and redirect its console to our terminal."
-    echo "               As soon as the VM starts, you will see some text. Quickly press the ESC key to interrupt"
-    echo "               the automatic boot process."
-    echo "               You will get a boot: prompt."
-    echo "               At this prompt, type install console=ttyS0 and press Enter. Make sure to select and"
-    echo "               install the "SSH server" option during the task selection step"
+    echo "  create-vm [-mem_size SIZE] [-hda_size SIZE]"
+    echo "     Creates the VM disk, and starts the OS installation."
+    echo "     -mem_size: Set VM RAM (e.g, 4G). Default: ${VM_MEM_SIZE}."
+    echo "     -hda_size: Set virtual disk size (e.g., 30G) Default: ${VM_DISK_SIZE}"
     echo ""
+    echo "  start-vm [-mem_size]"
+    echo "     Starts the existing the existing headless VM with SSH forwarding port on 2222."
+    echo "     -mem_size: Set VM RAM (e.g, 4G). Default: ${VM_MEM_SIZE}."
     echo ""
-    echo "  start-vm  -- Running your new headless VM. This sets up user-mode networking and, most importantly, forwards"
-    echo "               port 2222 on your host machine to port 22 (the SSH port) inside the VM."
+    echo "  help"
+    echo "     Displays this help message."
     echo ""
-    echo "Options:"
-    echo "The following options are supported:"
-    echo "  create-vm [-mem] -- Allocate RAM size to the VM. Example: 4G"
-    echo "  create-vm [-hda] -- Creates virtual hard disk with size that will be attached to the VM. Example: 20G"
+    echo "Installation instruction for 'create-vm':"
+    echo "  1. At the boot menu, press ESC."
+    echo "  2. At the 'boot:' prompt, type 'install console=ttyS0' and press Enter."
+    echo "  3. During installation, ensure you select and install the 'SSH server'."
     echo ""
 }
 
 create_vm() {
-    local memory_sise=""
-    local hda_size=""
+    local memory_size="$VM_MEM_SIZE"
+    local disk_size="$VM_DISK_SIZE"
     
     while [[ $# -gt 0 ]]; do
         case $1 in
-            -mem)
-                if [[ -z "$2" ]]; then
-                    echo "Error: no value found for mem" >&2
-                    print_help
-                    exit 1
-                fi
-                memory_sise=$2
-                shift
-                shift
+            -mem_size)
+                [[ -z "$2" ]] && LOG_FATAL "'-mem_size' requires a value. (e.g., 4G)"
+                memory_size="$2"
+                shift 2
                 ;;
-            -hda)
-                if [[ -z "$2" ]]; then
-                    echo "Error: no value for hda" >&2
-                    print_help
-                    exit 1
-                hda_size=$2
-                shift
-                shift
+            -hda_size)
+                [[ -z "$2" ]] && LOG_FATAL"'-hda_size' requires a value. (e.g., 20G)"
+                disk_size="$2"
+                shift 2
                 ;;
             *)
-                print_help
-                exit 1
+                LOG_FATAL "Unknown option for 'create-vm' command"
+                ;;
         esac
     done
     
-    LOG_INFO "Checking for a logical volume: ${FTHLD_LABS_LV}"
-    if ! file $FTHLD_LABS_LV >/dev/null 2>&1; then
-        LOG_INFO "LV not found. Creating a QEMU copy-on-write version 2 format: ${FTHLD_LABS_LV} with ${hda_size}"
-        qemu-img create -f qcow2 $FTHLD_LABS_LV $hda_size
-    
-        LOG_INFO "LV Created:"
+    LOG_INFO "Checking for disk image: ${VM_DISK_FILE}"
+    if [ -f "$VM_DISK_FILE" ]; then
+        LOG_INFO "Disk already exists. Skipping creation."
     else
-        LOG_INFO "LV found:"
+        LOG_INFO "Creating QEMU disk image '${VM_DISK_FILE} with ${disk_size} size..."
+        qemu-img create -f qcow2 "$VM_DISK_FILE" "$disk_size" || LOG_FATAL "Failed to create disk image"
+        LOG_INFO "Disk image created successfully."
     fi
     
-    file $FTHLD_LABS_LV
+    file $VM_DISK_FILE
     
-    LOG_INFO "Creating a VM..."
+    LOG_INFO "Starting VM for installation with ${memory_size} of RAM..."
     qemu-system-x86_64 \
         -machine accel=kvm \
-        -m $memory_sise \
+        -m "$memory_size" \
         -nographic \
-        -hda $FTHLD_LABS_LV \
-        -cdrom $ISO_FILE \
+        -hda "$VM_DISK_FILE" \
+        -cdrom "$ISO_FILE" \
         -boot d
 }
 
 start_vm() {
-    if [[ -z "$1" ]]; then
-        print_help
-        exit 1
+    local memory_size="$VM_MEM_SIZE"
+    
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -mem_size)
+                [[ -z "$1" ]] && LOG_FATAL "'-mem_size' requires a value. (e.g., 4G)"
+                memory_size="$2"
+                shift 2
+                ;;
+            *)
+                LOG_FATAL "Unknown option for start-vm: $1"
+                ;;
+        esac
+    done
+    
+    if [ ! -f "$VM_DISK_FILE" ]; then
+        LOG_FATAL "VM disk image '$VM_DISK_FILE' not found. Run 'create-vm' first"
     fi
     
-    if ! file $FTHLD_LABS_LV >/dev/null 2>&1; then
-        LOG_FATAL "Logical volume not found."
-        LOG_INFO "Run qemu-img create -f qcow2 [name] [size] to create LV." 
-        LOG_INFO "Or run create-vm to create both LV and VM."
-        exit 1
-    fi
-    
-    LOG_INFO "Spinning up..."
+    LOG_INFO "Starting headless VM with ${memory_size} RAM. SSH on localhost:2222."
     qemu-system-x86_64 \
         -machine accel=kvm \
-        -m $1 \
+        -m $memory_size \
         -nographic \
-        -hda $FTHLD_LABS_LV \
+        -hda $VM_DISK_FILE \
         -netdev user,id=net0,hostfwd=tcp::2222-:22 \
         -device e1000,netdev=net0
 }
 
-if [[ "$1" == "create-vm" ]]; then
-    shift
-    LOG_INFO "Creating VM..."
-    create_vm "$@"
-elif [[ "$1" == "start-vm" ]]; then
-    shift
-    LOG_INFO "Starting VM..."
-    start_vm "$@"
-else
-    print_help
+# Check for required dependencies called in this script
+check_deps
+
+LOG_INFO "Checking for ISO file: ${ISO_FILE}"
+if [ ! -f "$ISO_FILE" ]; then
+    LOG_INFO "ISO file not found in directory. Attempting download..."
+    wget -0 $ISO_FILE $ISO_URL || LOG_FATAL "Failed to download ISO image from ${ISO_URL}"
 fi
+
+LOG_INFO "ISO file found."
+
+case $1 in
+    create-vm)
+        shift
+        create_vm "$@"
+        ;;
+    start-vm)
+        shift
+        start_vm "$@"
+        ;;
+    help|--help|-h)
+        print_help
+        ;;
+    *)
+        if [[ -z "$1" ]]; then
+            LOG_INFO "No command was specified."
+        else
+            LOG_INFO "Command not recognized: ${1}"
+        fi
+        print_help
+        exit 1
+        ;;
+esac
