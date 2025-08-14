@@ -1,0 +1,133 @@
+303  2025-08-11 12:55:11 zed foothold-lab/
+  304  2025-08-11 12:55:47 zed so2-labs/
+  305  2025-08-11 15:23:52 echo $DISPLAY
+  306  2025-08-11 15:43:12 xauth nlist "$DISPLAY"
+  307  2025-08-11 16:16:41 ./setup.sh
+  308  2025-08-11 16:16:54 chmod -R 777 ./setup.sh 
+  309  2025-08-11 16:16:57 ./setup.sh
+  310  2025-08-11 16:17:13 sudo ./setup.sh 
+  311  2025-08-11 16:54:03 docker
+  312  2025-08-11 16:54:36 touch Dockerfile
+  313  2025-08-11 17:11:59 docker build -t foothold-lab:latest
+  314  2025-08-11 17:12:29 docker buildx build -t foothold-lab:latest
+  315  2025-08-11 17:12:47 docker buildx build -t foothold-lab:latest .
+  316  2025-08-11 17:12:56 docker
+  317  2025-08-11 17:15:54 sudo systemctl start docker
+  318  2025-08-11 17:16:12 docker buildx build -t foothold-lab:latest .
+  319  2025-08-11 17:17:46 sudo systemctl status docker
+  320  2025-08-11 17:18:03 docker buildx build -t foothold-lab:latest .
+  321  2025-08-11 17:42:16 PWD
+  322  2025-08-11 17:42:32 ${PWD}
+  323  2025-08-11 18:10:27 sudo ./setup.sh docker
+  324  2025-08-11 18:10:54 sudo ./setup.sh docker interactive --privileged
+  325  2025-08-11 18:11:14 docker images
+  326  2025-08-11 18:17:03 ./setup.sh docker interactive --privileged
+  327  2025-08-11 18:20:37 docker buildx build -t foothold-lab:latest .
+  328  2025-08-11 18:20:49 ./setup.sh docker interactive --privileged
+  329  2025-08-11 18:25:36 docker buildx build -t foothold-lab:latest .
+  330  2025-08-11 18:27:57 ls -l /dev/kvm
+  331  2025-08-11 18:28:14 lsmod | grep kvm
+  332  2025-08-11 18:28:27 egrep -c '(vmx|svm)' /proc/cpuinfo
+  333  2025-08-11 18:26:00 ./setup.sh docker interactive --privileged
+  334  2025-08-11 18:31:35 sudo docker run -it --rm --privileged --device /dev/kvm foothold-lab:latest kvm-ok
+  335  2025-08-11 18:31:54 docker run -it --rm --privileged --device /dev/kvm foothold-lab:latest kvm-ok
+  336  2025-08-11 18:35:45 docker run -it --rm --privileged --device /dev/kvm --net=host foothold-lab:latest kvm-ok
+  337  2025-08-11 18:45:11 kvm-ok
+  338  2025-08-11 18:44:27 ./setup.sh docker interactive --privileged
+  339  2025-08-11 19:04:56 cd foothold-lab/
+  340  2025-08-11 19:05:15 ./setup.sh docker interactive --privileged
+  341  2025-08-11 19:05:30 cd ..
+  342  2025-08-11 19:05:32 cd so2-labs/
+  343  2025-08-11 19:05:48 sudo ./local.sh docker interactive --privileged
+  344  2025-08-11 21:15:43 git add .
+  345  2025-08-11 21:15:48 git init
+  346  2025-08-11 21:15:55 git add .
+  347  2025-08-11 21:16:46 git commit -m "feat: first version of docker qemu enivironment to run isolated VMs"
+  348  2025-08-11 21:48:26 sudo docker build --build-arg ARG_UID=$(id -u) --build-arg ARG_GID=$(id -g) -t foothold-lab:latest .
+  349  2025-08-11 21:53:31 sudo ./setup.sh docker interactive --privileged
+  350  2025-08-11 22:06:47 sudo ./setup.sh docker interactive --privileged --allow-gui
+  351  2025-08-08 14:42:08 $0
+  352  2025-08-12 10:16:57 cd Projects
+  353  2025-08-12 10:17:10 cd Go
+  354  2025-08-12 10:17:31 zed dsa-tank/
+  355  2025-08-12 11:31:29 git add .
+  356  2025-08-12 11:33:09 git commit -m "feat(redblack-tree): the deleteFixup implementation aims to restore the lost redblack properties of the tree by fixing a supposed double-black scenario after a deletion"
+  357  2025-08-12 11:33:13 git push
+  358  2025-08-12 12:40:24 sudo apt update
+  359  2025-08-12 12:40:44 cd ~
+  360  2025-08-12 12:40:58 sudo apt upgrade
+  361  2025-08-12 13:39:34 ls Downloads
+  362  2025-08-12 13:43:41 sudo apt install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils virt-manager
+  363  2025-08-12 13:45:43 sudo adduser $USER libvirt && sudo adduser $USER kvm
+  364  2025-08-12 13:48:19 sudo systemctl status libvirt
+  365  2025-08-12 13:49:03 sudo systemctl start libvirt
+  366  2025-08-12 13:49:13 sudo systemctl status libvirtd
+  367  2025-08-12 14:07:46 systemctl status NetworkManager
+  368  2025-08-12 14:09:17 ip link
+  369  2025-08-12 14:10:42 nmcli connection show
+  370  2025-08-12 14:14:23 sudo nmcli connection add type bridge ifname br0 con-name bridge-br0
+  371  2025-08-12 14:17:39 sudo nmcli connection add type wifi ifname wlp0s20f3 master br0 con-name bridge-slave-wlp0s20f3
+  372  2025-08-12 14:20:24 nmcli connection show
+  373  2025-08-12 14:36:31 sudo nmcli connection delete bridge-br0
+  374  2025-08-12 14:36:40 nmcli connection show
+  375  2025-08-12 14:37:14 sudo usermod -aG kvm,libvirt $USER
+  376  2025-08-12 14:37:14 newgrp libvirt
+  377  2025-08-12 14:42:19 sudo virsh net-list --all
+  378  2025-08-12 14:52:05 sudo virt-manager
+  379  2025-08-12 15:17:15 sudo virsh net-start default
+  380  2025-08-12 15:26:55 sudo virsh net-autostart default
+  381  2025-08-12 16:18:19 sudo virt-manager
+  382  2025-08-12 17:27:39 cd Projects
+  383  2025-08-12 17:27:49 cd foothold-lab/
+  384  2025-08-12 17:27:56 zed
+  385  2025-08-12 17:31:25 zed .
+  386  2025-08-12 17:38:06 cd Projects/foothold-lab
+  387  2025-08-12 17:38:35 cd ..
+  388  2025-08-12 17:38:58 mv /home/yemi/Projects/foothold-lab /home/yemi/Projects/foothold-labs
+  389  2025-08-12 17:39:13 cd foothold-labs
+  390  2025-08-12 17:40:10 sudo ./setup.sh docker interactive --privileged
+  391  2025-08-12 19:40:30 cd Projects
+  392  2025-08-12 19:40:33 cd foothold-labs/
+  393  2025-08-12 19:42:34 zed Projects/so2-labs/
+  394  2025-08-12 19:41:00 sudo ./setup.sh docker interactive --privileged
+  395  2025-08-12 21:34:32 zed Projects/foothold-labs/
+  396  2025-08-12 21:34:43 git add .
+  397  2025-08-12 21:35:42 git commit -m "refactor: added a docker volume inspection, confirming volume exists before continuing the rest of the script"
+  398  2025-08-12 21:39:08 git remote add origin git@github.com:0xull/foothold-labs.git
+  399  2025-08-12 21:39:08 git branch -M main
+  400  2025-08-12 21:39:08 git push -u origin main
+  401  2025-08-12 21:39:25 git remote add origin git@github.com:0xull/foothold-labs.git
+  402  2025-08-12 21:39:25 git branch -M main
+  403  2025-08-12 21:39:25 git push -u origin main
+  404  2025-08-12 21:42:55 hex
+  405  2025-08-13 03:47:53 ls -a
+  406  2025-08-13 03:56:13 gpg --generate-key
+  407  2025-08-13 04:01:18 pass init 46E2BB0BB70F21C50E01FF0FA09985F12CF3EB0C
+  408  2025-08-13 04:02:46 sudo ./setup.sh docker interactive --privileged
+  409  2025-08-13 11:36:49 cd ~/Projects/Go/dsa-tank/
+  410  2025-08-13 11:36:54 zed .
+  411  2025-08-13 14:32:20 git add .
+  412  2025-08-13 14:38:39 git commit -m "feat(heap): implementing private helper functions for heap properties"
+  413  2025-08-13 14:45:45 cd ..
+  414  2025-08-13 14:48:22 cd foothold-labs/
+  415  2025-08-13 14:50:59 sudo ./setup.sh docker interactive --privileged
+  416  2025-08-13 15:35:01 virsh list --all
+  417  2025-08-13 15:35:48 virsh start foothold-labs 
+  418  2025-08-13 15:36:09 virsh list --all
+  419  2025-08-13 15:37:18 virsh console --help
+  420  2025-08-13 15:38:20 virt-manager
+  421  2025-08-13 15:36:26 virsh console foothold-labs 
+  422  2025-08-13 15:39:50 virsh console foothold-labs 
+  423  2025-08-13 15:46:12 qemu-img
+  424  2025-08-13 17:16:41 qemu-img create -f qcow2 foothold-labs.qcow2 20G
+  425  2025-08-13 17:17:25 cp --help
+  426  2025-08-13 17:18:16 mv --help
+  427  2025-08-13 17:19:29 mv ~/Downloads/debian-13.0.0-amd64-netinst.iso  ~/Projects/foothold-labs/
+  428  2025-08-13 17:19:46 ls ~/Downloads/ls
+  429  2025-08-13 17:20:09 touch .gitignore
+  430  2025-08-13 17:22:13 qemu-system-x86_64 -machine accel=kvm -m 4G -nographic hda foothold-labs.qcow2 -cdrom debian-13.0.0-amd64-netinst.iso \ 
+  431  2025-08-13 17:26:25 qemu-system-x86_64 -machine accel=kvm -m 4G -nographic -hda foothold-labs.qcow2 -cdrom debian-13.0.0-amd64-netinst.iso -boot d 
+  432  2025-08-13 18:33:13 qemu-system-x86_64 -machine accel=kvm -m 4G -nographic hda foothold-labs.qcow2 -netdev user,id=net0,hostfwd=tcp::2222-:22 -device e1000,netdev=net0
+  433  2025-08-13 18:33:30 qemu-system-x86_64 -machine accel=kvm -m 4G -nographic -hda foothold-labs.qcow2 -netdev user,id=net0,hostfwd=tcp::2222-:22 -device e1000,netdev=net0
+  434  2025-08-13 18:37:51 ssh yemi@localhost -p 2222
+  435  2025-08-14 14:11:33 cd Projects/foothold-labs/
